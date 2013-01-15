@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"/>
+        <link rel="stylesheet" href="css/manage.css"/>
+    </head>
+    <body>
+        <div id="manage">
+            <button id="create">Create Ship</button>
+            <ul id="ships">
+            </ul>
+        </div>
+
+        <div id="dialog-form" title="Create new ship">
+            <form>
+                <fieldset>
+                    <label for="name">Name</label>
+                    <input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+            </form>
+        </div>
+
+        <div id="crew-form" title="Chose crewmember name">
+            <form>
+                <fieldset>
+                    <label for="name">Name</label>
+                    <input type="text" name="crewName" id="crewName" class="text ui-widget-content ui-corner-all" />
+                </fieldset>
+            </form>
+        </div>
+    
+        <script src="../Engine/lib/jquery.min.js"></script>
+        <script src="../Engine/lib/jquery-ui.js"></script>
+        <script src="../Engine/util.js"></script>
+        <script src="js/manage.js"></script>
+    </body>
+</html>
