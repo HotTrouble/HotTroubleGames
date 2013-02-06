@@ -8,6 +8,11 @@ jQuery.fn.justtext = function() {
  
 };
 
+function random(n)
+{
+    return Math.floor(Math.random()*n);
+}
+
 function create(constructor)
 {
     parent=constructor();

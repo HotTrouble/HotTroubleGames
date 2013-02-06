@@ -246,13 +246,13 @@ function HexMap()
 {
     self=create(Map);
 
-    self.makeTile=function(tile)
+    self.makeTile=function(image)
     {
         var t=new Kinetic.RegularPolygon({
             sides: 6,
             radius: self.mapHexSize,
             fill: {
-                image: tile.attrs.image,
+                image: image,
                 offset: [-32,-32],
             },
             stroke: 'gray',
@@ -274,6 +274,12 @@ function HexMap()
         var ty=self.offsetY+(y*self.mapHexSize*1.6);
         return {'x': tx, 'y': ty};
     }    
+    
+    self.getObjectCoords=function(x, y)
+    {
+        var coords=self.getTileCoords(x, y);
+        return {'x': coords.x-16, 'y': coords.y-16};
+    }
 
     self.initObjects=function(image, tileSize, tileCount, objectList, offsetX, offsetY)
     {       
@@ -288,10 +294,10 @@ function HexMap()
             var y=obj[1];
             var index=obj[2];
             
-            coords=self.getTileCoords(x, y);
+            coords=self.getObjectCoords(x, y);
             var tile=self.objectTiles[index].clone();
-            tile.setX(coords.x-16);
-            tile.setY(coords.y-16);
+            tile.setX(coords.x);
+            tile.setY(coords.y);
             tile.attrs.visible=true;
             tile.attrs.tileX=x;
             tile.attrs.tileY=y;
@@ -305,50 +311,46 @@ function HexMap()
         objectLayer.draw();
     }
 
-    self.init=function(image, tileSize, tileCount, hexSize, map, tileClicked, offsetX, offsetY)
+    self.moveObject=function(object, x, y)
+    {
+        object.attrs.tileX=x;
+        object.attrs.tileY=y;
+        var coords=self.getObjectCoords(x, y);
+        object.transitionTo({
+            x: coords.x,
+            y: coords.y,
+            duration: 0.5,
+        });
+    }
+
+    self.initHex=function(tiles, hexSize, map, tileClicked, offsetX, offsetY)
     {
         console.log('initBoard');
         
+        self.tiles=tiles;
         self.offsetX=offsetX;
         self.offsetY=offsetY;
-        self.tileSize=tileSize;
-        self.tileCount=tileCount;
         self.mapHexSize=hexSize;
-        
-        self.initTiles(image, tileSize, tileCount, self.tiles);
-            
+                    
         board=new Kinetic.Layer();    
-        self.initMap(self.tiles, map, offsetX, offsetY, self.makeTile, self.getTileCoords, tileClicked, self.map, board);
-        
-        for(var index=0; index<self.map.length; index++)
-        {
-            var tile=self.map[index];
-            var x=tile.attrs.tileX;
-            var y=tile.attrs.tileY;
-            self.setTileState(x, y, 9);
-        }
+        console.log('will init hex map');
+        self.initMap(self.tiles, map, offsetX, offsetY, self.makeTile, self.getTileCoords, tileClicked, self.map, board);        
+        console.log('did init hex map');
     }
     
     self.setTileState=function(x, y, state)
     {
         console.log('setTileState '+state);
         var tile=self.getTile(x, y);
-        var tileOffsetX=state%self.tileCount;
-        var tileOffsetY=Math.floor(state/self.tileCount);
-        console.log('tile: '+state+' '+tileOffsetX+' '+tileOffsetY);
-        
-        tileOffsetX=1;
-        tileOffsetY=0;
         
         if(tile!=null)
         {
             tile.attrs.tileType=state;                    
             
             var t=self.tiles[state];
-            var t=self.tiles[0];
             tile.setFill({
-                image: t.attrs.image,
-                offset: [(tileOffsetX*64)-32,-((tileOffsetY*64)-32)],
+                image: t,
+                offset: [-32, -32],
             });
             
             self.mapLayer.draw();

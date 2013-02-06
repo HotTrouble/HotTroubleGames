@@ -4,69 +4,11 @@ var crewName;
 var shipX=10;
 var shipY=200;
 
-var consoleX=340;
-var consoleY=200;
-
 var charX=2;
 var charY=1;
 
 var ship;
-var spacemap;
 var panel;
-
-function CaptainConsole()
-{
-    self=this;
-    
-    self.init=function()
-    {
-        console.log('init captain console');
-        self.spacemap=create(HexMap);
-        self.spacemap.init(images.hex, 64, 4, 32, hexMap, self.mapClicked, consoleX, consoleY);
-        self.spacemap.initObjects(images.ships, 64, 2, hexObjectsMap, consoleX, consoleY);    
-        
-        self.explore(0,2);
-    }
-    
-    self.explore=function(x,y)
-    {
-        var obj=self.spacemap.getTile(x, y);
-        console.log('found: '+obj);
-        if(obj.attrs.tileType==0)
-        {
-            console.log('unexplored');
-            self.spacemap.setTileState(x, y, self.getNextState());
-        }
-    }    
-    
-    self.mapClicked=function()    
-    {
-        console.log('map clicked!');
-        console.log(this);
-        var x=this.attrs.tileX;
-        var y=this.attrs.tileY;
-        console.log('('+x+','+y+')')
-        self.explore(x,y);
-    }
-
-    self.getNextState=function()
-    {
-      var r=Math.random();
-      for(var x=0; x<nextTable.length-1; x++)
-      {  
-        if(r>=nextTable[x] && r<nextTable[x+1])
-        {
-            console.log('next: '+r+' '+x+' '+nextTable[x]+' '+nextTable[x+1]);
-            break;
-        }
-      }
-      
-      console.log('next:: '+r+' '+x);
-      return x;
-    }
-    
-    return self;
-}
 
 var consoles=[
     CaptainConsole,
@@ -147,6 +89,24 @@ function init()
         hex: '../Assets/images/mapTiles.png',
         mainchar: '../Assets/images/mainChar.png',
         ships: '../Assets/images/ships.png',
+        
+        empty1: '../Assets/images/emptySpace1.png',
+        empty2: '../Assets/images/emptySpace2.png',
+        empty3: '../Assets/images/emptySpace3.png',
+        empty4: '../Assets/images/emptySpace4.png',
+        empty5: '../Assets/images/emptySpace5.png',
+        empty6: '../Assets/images/emptySpace6.png',
+        empty7: '../Assets/images/emptySpace7.png',
+        empty8: '../Assets/images/emptySpace8.png',
+        
+        space1: '../Assets/images/space1.png',
+        space2: '../Assets/images/space2.png',
+        space3: '../Assets/images/space3.png',
+        space4: '../Assets/images/space4.png',
+        space5: '../Assets/images/space5.png',
+        space6: '../Assets/images/space6.png',
+        space7: '../Assets/images/space7.png',
+        space8: '../Assets/images/space8.png',
     };
     
     var audioSources={        
