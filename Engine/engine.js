@@ -121,7 +121,8 @@ function Map()
         console.log('objectTiles');
         console.log(self.objectTiles);
         
-        var objectLayer=new Kinetic.Layer();
+        self.objectLayer=new Kinetic.Layer();
+        self.stage.add(self.objectLayer);
     
         for(var index=0; index<objectList.length; index++)
         {
@@ -130,21 +131,28 @@ function Map()
             var y=obj[1];
             var index=obj[2];
             
-            coords=self.getTileCoords(x, y);
-            var tile=self.objectTiles[index].clone();
-            tile.setX(coords.x);
-            tile.setY(coords.y);
-            tile.attrs.visible=true;
-            tile.attrs.tileX=x;
-            tile.attrs.tileY=y;
-            tile.attrs.tileType=index;
-            self.objectMap.push(tile);
-            objectLayer.add(tile);
-        }
-                
-        self.stage.add(objectLayer);
-        objectLayer.draw();
+            self.addObject(x, y, index);                        
+        }                
     }    
+    
+    self.addObject=function(x, y, index)
+    {
+        var coords=self.getTileCoords(x, y);
+        var tile=self.objectTiles[index].clone();
+        console.log('addObject '+tile+' '+self.objectLayer);
+        tile.setX(coords.x);
+        tile.setY(coords.y);
+        tile.attrs.visible=true;
+        tile.attrs.tileX=x;
+        tile.attrs.tileY=y;
+        tile.attrs.tileType=index;
+        self.objectMap.push(tile);
+        self.objectLayer.add(tile);        
+        
+        self.objectLayer.draw();      
+        
+        return tile;  
+    }
     
     self.initChars=function(image, tileSize, anims, defaultState, tileX, tileY)
     {
@@ -220,6 +228,49 @@ function Map()
         return null;
     }    
     
+    self.stroke=function(x, y, color)
+    {
+        var tile=self.getTile(x, y);
+        if(tile!=null)
+        {
+            tile.setStroke(color);
+            self.mapLayer.draw();
+        }
+    }
+    
+    self.clearStroke=function(color)
+    {
+        console.log('clearStroke '+color);
+        for(var i=0; i<self.map.length; i++)
+        {
+            var tile=self.map[i];
+            tile.setStroke(color);
+        }        
+        
+        self.mapLayer.draw();        
+    }
+    
+    self.checkMove=function(here, there, moves)
+    {
+        for(var i=0; i<moves.length; i++)
+        {
+            var move=moves[i];
+            console.log('checking move '+here+' '+there+' '+move);
+            if(there[0]==here[0]+move[0] && there[1]==here[1]+move[1])
+            {
+                console.log('checkMove '+there[0]+' '+there[1]+' maybe');
+                if(self.getTile(there[0], there[1])!=null)
+                {
+                    console.log('checkMove '+there[0]+' '+there[1]+' true');
+                    return true;
+                }
+            }
+        }
+        
+        console.log('checkMove '+there[0]+' '+there[1]+' false');
+        return false;
+    }
+    
     return self;
 }
 
@@ -270,7 +321,7 @@ function HexMap()
             stagger=self.mapHexSize;
         }
         
-        var tx=self.offsetX+(x*self.mapHexSize*1.8)+stagger;
+        var tx=self.offsetX+(x*self.mapHexSize*0.9);
         var ty=self.offsetY+(y*self.mapHexSize*1.6);
         return {'x': tx, 'y': ty};
     }    
@@ -285,7 +336,8 @@ function HexMap()
     {       
         self.initTiles(image, tileSize, tileCount, self.objectTiles);
         
-        var objectLayer=new Kinetic.Layer();
+        self.objectLayer=new Kinetic.Layer();
+        stage.add(self.objectLayer);
     
         for(var index=0; index<objectList.length; index++)
         {
@@ -294,24 +346,30 @@ function HexMap()
             var y=obj[1];
             var index=obj[2];
             
-            coords=self.getObjectCoords(x, y);
-            var tile=self.objectTiles[index].clone();
-            tile.setX(coords.x);
-            tile.setY(coords.y);
-            tile.attrs.visible=true;
-            tile.attrs.tileX=x;
-            tile.attrs.tileY=y;
-            tile.attrs.tileType=index;
-            tile.setScale(0.5);
-            self.objectMap.push(tile);
-            objectLayer.add(tile);
-        }
-                
-        stage.add(objectLayer);
-        objectLayer.draw();
+            self.addObject(x, y, index);
+        }                
     }
 
-    self.moveObject=function(object, x, y)
+    self.addObject=function(x, y, index)
+    {
+        var coords=self.getObjectCoords(x, y);
+        var tile=self.objectTiles[index].clone();
+        tile.setX(coords.x);
+        tile.setY(coords.y);
+        tile.attrs.visible=true;
+        tile.attrs.tileX=x;
+        tile.attrs.tileY=y;
+        tile.attrs.tileType=index;
+        tile.setScale(0.5);
+        self.objectMap.push(tile);
+        self.objectLayer.add(tile);        
+        
+        self.objectLayer.draw();        
+        
+        return tile;
+    }
+
+    self.moveObject=function(object, x, y, callback)
     {
         object.attrs.tileX=x;
         object.attrs.tileY=y;
@@ -320,6 +378,7 @@ function HexMap()
             x: coords.x,
             y: coords.y,
             duration: 0.5,
+            callback: callback,
         });
     }
 

@@ -82,7 +82,7 @@ function init()
     console.log('Crew member '+crewName+' on the ship '+shipName);
 
     var imageSources={
-        background: '../../Assets/images/lumpspace.png',
+        background: '../../Assets/images/spaceBackground.png',
         bgtiles: '../../Assets/images/BGtile.png',
         scout: '../../Assets/images/Scout.png',
         console: '../../Assets/images/Console.png',
@@ -111,6 +111,9 @@ function init()
     
     var audioSources={        
     };
+    
+    var theme=new buzz.sound('../../Assets/audio/voyage.mp3');
+    theme.loop().play();    
         
     initEngine(imageSources, audioSources, initGame);
 }

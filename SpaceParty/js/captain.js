@@ -6,9 +6,43 @@ var shipLocation={x: 0, y: 2};
 var spacemap;
 var shipObject;
 
+var shipMoves=[
+    [2,0],
+    [-2,0],           
+    [-1,1],
+    [1,1],           
+    [-1,-1],
+    [1,-1],           
+    [0,0],
+];
+
+var enemyMoves=[
+    [2,0],
+    [-1,1],
+    [-1,-1],
+    [0,0],
+];
+
 function CaptainConsole()
 {
     self=this;
+    
+    self.lastTile=0;
+    self.enemies=[];
+    self.secretMap=[
+        [-1,-1, 0,-1, 0,-1, 0,-1,-1,],
+        [-1, 0,-1, 0,-1, 0,-1, 0,-1,],
+        [ 0,-1, 0,-1, 0,-1, 0,-1, 0,],
+        [-1, 0,-1, 0,-1, 0,-1, 0,-1,],
+        [-1,-1, 0,-1, 0,-1, 0,-1,-1,],
+    ];
+    self.visibleMap=[
+        [-1,-1, 0,-1, 0,-1, 0,-1,-1,],
+        [-1, 0,-1, 0,-1, 0,-1, 0,-1,],
+        [ 0,-1, 0,-1, 0,-1, 0,-1, 0,],
+        [-1, 0,-1, 0,-1, 0,-1, 0,-1,],
+        [-1,-1, 0,-1, 0,-1, 0,-1,-1,],
+    ];
     
     self.init=function()
     {
@@ -34,69 +68,85 @@ function CaptainConsole()
             images.space8, 
         ];
         
+        self.createSecretMap();
+        self.createVisibleMap();
+        
         self.spacemap=create(HexMap);
-        self.spacemap.initHex(hexImages, 32, self.createSecretMap(), self.mapClicked, consoleX, consoleY);
+        self.spacemap.initHex(hexImages, 32, self.visibleMap, self.mapClicked, consoleX, consoleY);
         self.spacemap.initObjects(images.ships, 64, 2, hexObjectsMap, consoleX, consoleY);            
         shipObject=spacemap.getObject(shipLocation.x, shipLocation.y);
         
-        self.explore(shipLocation.x, shipLocation.y);
+        self.lastTile=self.spacemap.getTile(start[0], start[1]);        
+        
+        self.explore(shipLocation.x, shipLocation.y);        
+        self.moveCompleted();
     }
     
     self.createSecretMap=function()
     {
-        var start=[2,0];    
-    
-        var secretMap=[
-            [-1,  0,0,0,  -1,],
-            [    0,0,0,0, -1,],
-            [   0,0,0,0,0,   ],
-            [    0,0,0,0, -1,],
-            [-1,  0,0,0,  -1,],
-        ];        
-        
-        for(var y=0; y<secretMap.length; y++)
+        var start=[2,0];            
+                    
+        for(var y=0; y<self.secretMap.length; y++)
         {
-            for(var x=0; x<secretMap[y].length; x++)
+            for(var x=0; x<self.secretMap[y].length; x++)
             {
-                if(secretMap[y][x]!=-1)
+                if(self.secretMap[y][x]!=-1)
                 {
-                    secretMap[y][x]=random(8);
+                    self.secretMap[y][x]=8;
                 }
             }
         }        
 
-        secretMap[start[0]][start[1]]=8;
+        self.secretMap[start[0]][start[1]]=8;
         
-        var earthRow=random(secretMap.length);
+        var earthRow=random(self.secretMap.length);
 
         var offset=0;        
-        for(var i=secretMap[earthRow].length-1; i>=0; i--)
+        for(var i=self.secretMap[earthRow].length-1; i>=0; i--)
         {
-            if(secretMap[earthRow][i]!=-1)
+            if(self.secretMap[earthRow][i]!=-1)
             {
                 offset=i;
                 break;
             }
         }
         
-        var earthCol=offset-random(2);
+        var earthCol=offset-(random(2)*2);
         
-        secretMap[earthRow][earthCol]=15;     
+        self.secretMap[earthRow][earthCol]=15;     
 
         var blocked=[start[0], earthRow];
         for(var nMars=0; nMars<2; nMars++)
         {        
-            var marsCoords=self.placeMars(secretMap, blocked);
+            var marsCoords=self.placeMars(self.secretMap, blocked);
             if(marsCoords!=null)
             {
-                secretMap[marsCoords[0]][marsCoords[1]]=14;
+                self.secretMap[marsCoords[0]][marsCoords[1]]=14;
                 blocked.push(marsCoords[0]);
             }
         }
         
-        console.log('secretMap: '+secretMap);
+        console.log('secretMap: '+self.secretMap);
         
-        return secretMap;
+        return self.secretMap;
+    }
+
+    self.createVisibleMap=function()
+    {
+        var start=[2,0];            
+                    
+        for(var y=0; y<self.visibleMap.length; y++)
+        {
+            for(var x=0; x<self.visibleMap[y].length; x++)
+            {
+                if(self.visibleMap[y][x]!=-1)
+                {
+                    self.visibleMap[y][x]=random(8);
+                }
+            }
+        }        
+
+        self.visibleMap[start[0]][start[1]]=8;        
     }
     
     self.placeMars=function(secretMap, blocked)
@@ -146,14 +196,10 @@ function CaptainConsole()
     
     self.explore=function(x,y)
     {
-        var obj=self.spacemap.getTile(x, y);
+        var tileType=self.secretMap[y][x];
         console.log('exploring and found:');
-        console.log(obj.attrs.tileType);
-        if(obj.attrs.tileType<8)
-        {
-            console.log('unexplored');
-            self.spacemap.setTileState(x, y, 8);
-        }
+        console.log(tileType);
+        self.spacemap.setTileState(x, y, tileType);
     }    
     
     self.mapClicked=function()    
@@ -164,82 +210,120 @@ function CaptainConsole()
         var y=this.attrs.tileY;
         console.log('clicked tile ('+x+','+y+'), ship at ('+shipObject.attrs.tileX+','+shipObject.attrs.tileY+')')        
         
-        self.explore(x,y);
+        if(self.isValidMove([shipObject.attrs.tileX, shipObject.attrs.tileY], [x, y], shipMoves))
+        {
+            self.lastTile=self.spacemap.getTile(shipObject.attrs.tileX, shipObject.attrs.tileY);
+            self.explore(x,y);
+            self.spacemap.moveObject(shipObject, x, y, self.moveCompleted);
+        }
+    }
+    
+    self.moveCompleted=function()
+    {                    
+        console.log('move completed');
         
-        spacemap.moveObject(shipObject, x, y);
-                        
-        /*
-        callback: function() {
-            if(attacking)
-            {
-                console.log('attacking...');
-                console.log(enemy);
+        var here=self.spacemap.getTile(shipObject.attrs.tileX, shipObject.attrs.tileY);
+        if(here.attrs.tileType==15)
+        {
+            console.log('earth');
+            redirect('winning.html');
+        }        
+        else if(here.attrs.tileType==14)
+        {
+            console.log('mars');
+        }
+        else
+        {
+            console.log('not earth');
+        }
                 
-                var fight=new Kinetic.Sprite({
-                    x: x,
-                    y: y,
-                    image: images.fight,
-                    animations: animations,
-                    animation: 'bounce',
-                    frameRate: 10,                        
-                });
+        console.log('last Tile: '+self.lastTile);
+        if(self.lastTile!=null && self.lastTile.attrs.tileType==14)
+        {
+            console.log('placing enemy '+self.lastTile.attrs.tileX+' '+self.lastTile.attrs.tileY);
+            self.enemies.push(self.spacemap.addObject(self.lastTile.attrs.tileX, self.lastTile.attrs.tileY, 1));
+        }
 
-                effects.add(fight);
-                effects.draw();
-                
-                fight.afterFrame(3, function () {
-                    fight.stop();
-                    fight.attrs.visible=false;
-                    effects.draw();
-                    
-                    enemy.attrs.visible=false;
-                    actors.draw();
-                    
-                    var piece=getPieceByName(enemy.attrs.name);
-                    piece.start();
-                    
-                    if(enemy.attrs.king)
-                    {
-                        if(player==1)
-                        {
-                            window.location='winning2.html';                            
-                        }
-                        else
-                        {                            
-                            window.location='winning1.html';
-                        }
-                    }                    
-                });
-                
-                fight.start();                
-            }
-            else if(gettingTreasure)
+        self.spacemap.clearStroke('grey');
+        self.colorShipMoves();
+        self.colorEnemyMoves();        
+        
+        self.moveEnemies();
+    }
+        
+    self.colorShipMoves=function()
+    {
+        console.log('c$$$$$$$$$$$$$$$$$olor ship moves');
+        for(var y=0; y<shipMoves.length; y++)
+        {
+            var move=shipMoves[y];
+            var shipDest=[shipObject.attrs.tileX+move[0], shipObject.attrs.tileY+move[1]];
+            console.log('possible ship dest '+shipDest);
+            self.spacemap.stroke(shipDest[0], shipDest[1], 'white');
+        }
+    }
+    
+    self.colorEnemyMoves=function()
+    {
+        for(var x=0; x<enemies.length; x++)
+        {
+            var enemy=enemies[x];
+            for(var y=0; y<enemyMoves.length; y++)
             {
-                console.log('got treasure');
-                treasure.attrs.visible=false;
-                treasures.draw();
-                
-                if(player==1)
-                {
-                    p1Money=p1Money+treasure.attrs.value;
-                    p1MoneyText.setText('$'+p1Money);
-                }
-                else
-                {
-                    p2Money=p2Money+treasure.attrs.value;                    
-                    p2MoneyText.setText('$'+p2Money);
-                }
-                
-                barLayer.draw();
+                var move=enemyMoves[y];
+                var enemyDest=[enemy.attrs.tileX+move[0], enemy.attrs.tileY+move[1]];
+                console.log('possible enemy dest '+enemyDest);
+                self.spacemap.stroke(enemyDest[0], enemyDest[1], 'red');                
             }
+        }                        
+    }
+
+    self.moveEnemies=function()
+    {
+        for(var x=0; x<enemies.length; x++)
+        {
+            var enemy=enemies[x];
             
-            redrawBoard();
+            var moveStart=random(enemyMoves.length-1);
+            
+            for(var y=0; y<enemyMoves.length-1; y++)
+            {
+                var moveIndex=(moveStart+y)%(enemyMoves.length-1);
+                var move=enemyMoves[moveIndex];
                 
-            selected=null;
-            nextPlayer();            
-        },
-    });                
-    */
+                var enemyDest=[enemy.attrs.tileX+move[0], enemy.attrs.tileY+move[1]];
+                if(self.spacemap.getTile(enemyDest[0], enemyDest[1])!=null)
+                {
+                    console.log('making enemy move');                    
+                    self.spacemap.moveObject(enemy, enemyDest[0], enemyDest[1], self.enemyMoveCompleted);                
+                    break;
+                }
+            }            
+            
+            console.log('no moves for enemy');
+        }                        
+    }
+    
+    self.enemyMoveCompleted=function()
+    {
+        console.log('enemy move completed');
+        self.spacemap.clearStroke('grey');
+        self.colorShipMoves();
+        self.colorEnemyMoves();        
+        
+        for(var x=0; x<enemies.length; x++)
+        {
+            var enemy=enemies[x];
+            if(enemy.attrs.tileX==shipObject.attrs.tileX && enemy.attrs.tileY==shipObject.attrs.tileY)
+            {
+                redirect('losing.html');
+            }
+        }
+    }
+    
+    self.isValidMove=function(here, there, moves)
+    {
+        return self.spacemap.checkMove(here, there, moves);
     }
 
     self.getNextState=function()
