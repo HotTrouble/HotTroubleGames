@@ -27,6 +27,7 @@ function CaptainConsole()
 {
     self=this;
     
+    self.start=[2,0];            
     self.lastTile=0;
     self.enemies=[];
     self.secretMap=[
@@ -76,16 +77,14 @@ function CaptainConsole()
         self.spacemap.initObjects(images.ships, 64, 2, hexObjectsMap, consoleX, consoleY);            
         shipObject=spacemap.getObject(shipLocation.x, shipLocation.y);
         
-        self.lastTile=self.spacemap.getTile(start[0], start[1]);        
+        self.lastTile=self.spacemap.getTile(self.start[0], self.start[1]);        
         
         self.explore(shipLocation.x, shipLocation.y);        
         self.moveCompleted();
     }
     
     self.createSecretMap=function()
-    {
-        var start=[2,0];            
-                    
+    {                    
         for(var y=0; y<self.secretMap.length; y++)
         {
             for(var x=0; x<self.secretMap[y].length; x++)
@@ -97,7 +96,7 @@ function CaptainConsole()
             }
         }        
 
-        self.secretMap[start[0]][start[1]]=8;
+        self.secretMap[self.start[0]][self.start[1]]=8;
         
         var earthRow=random(self.secretMap.length);
 
@@ -115,7 +114,7 @@ function CaptainConsole()
         
         self.secretMap[earthRow][earthCol]=15;     
 
-        var blocked=[start[0], earthRow];
+        var blocked=[self.start[0], earthRow];
         for(var nMars=0; nMars<2; nMars++)
         {        
             var marsCoords=self.placeMars(self.secretMap, blocked);
@@ -132,9 +131,7 @@ function CaptainConsole()
     }
 
     self.createVisibleMap=function()
-    {
-        var start=[2,0];            
-                    
+    {                    
         for(var y=0; y<self.visibleMap.length; y++)
         {
             for(var x=0; x<self.visibleMap[y].length; x++)
@@ -146,7 +143,7 @@ function CaptainConsole()
             }
         }        
 
-        self.visibleMap[start[0]][start[1]]=8;        
+        self.visibleMap[self.start[0]][self.start[1]]=8;        
     }
     
     self.placeMars=function(secretMap, blocked)
