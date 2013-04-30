@@ -19,8 +19,23 @@ public class GameOfLife : MonoBehaviour {
     private int canvasH = 300;
     private float posScale = .4f;
     public GameObject cellPrefab;
+	public List<Tileset> tiles;
+	public int tileIndex=0;
+	public bool swap=false;
 
     private Cell cell;
+	
+	public class Tileset
+	{
+        public Material stateMat;
+        public Material unstateMat;		
+		
+		public Tileset(string m1, string m2)
+		{
+            stateMat = Resources.Load(m1, typeof(Material)) as Material;
+            unstateMat = Resources.Load(m2, typeof(Material)) as Material;
+		}
+	}
 
     public class Cell {
 
@@ -31,10 +46,9 @@ public class GameOfLife : MonoBehaviour {
         public GameObject cellFab;
         private GameObject cellRef;
         public List<Cell> neighbors;
-        public Material stateMat;
-        public Material unstateMat;
+		public GameOfLife world;
 
-        public Cell (float x, float y, Transform transform, GameObject cellFab){
+        public Cell (float x, float y, Transform transform, GameObject cellFab, GameOfLife world){
 
             // class properties should be used 
             // with 'this' to be accesbile from outside
@@ -43,6 +57,7 @@ public class GameOfLife : MonoBehaviour {
             this.y = y;
             this.parentTransform = transform;
             this.cellFab = cellFab;
+			this.world=world;
 
             if (Random.Range(0f,2f) > 1) {
               nextState = true;
@@ -54,9 +69,6 @@ public class GameOfLife : MonoBehaviour {
             state = nextState;
 
             neighbors = new List<Cell>();
-
-            stateMat = Resources.Load("StateMat", typeof(Material)) as Material;
-            unstateMat = Resources.Load("UnStateMat", typeof(Material)) as Material;
 
             Spawn();
             MoveStuff();
@@ -143,12 +155,24 @@ public class GameOfLife : MonoBehaviour {
             state = nextState;
 
             if (state == true) {
-                // add black material
-                cellRef.renderer.sharedMaterial = stateMat;
+				if(world.swap)
+				{
+	                cellRef.renderer.sharedMaterial = world.tiles[world.tileIndex].unstateMat;
+				}
+				else
+				{
+	                cellRef.renderer.sharedMaterial = world.tiles[world.tileIndex].stateMat;
+				}
             }
             else {
-                // add white material
-                cellRef.renderer.sharedMaterial = unstateMat;
+				if(world.swap)
+				{
+	                cellRef.renderer.sharedMaterial = world.tiles[world.tileIndex].stateMat;
+				}
+				else
+				{
+	                cellRef.renderer.sharedMaterial = world.tiles[world.tileIndex].unstateMat;
+				}
             }
         }
 
@@ -156,12 +180,17 @@ public class GameOfLife : MonoBehaviour {
 
 
     // Use this for initialization
-    void Start () {
-
+    void Start () {		
         _numX = (int)Mathf.Floor(canvasW/_cellSize);
         _numY = (int)Mathf.Floor(canvasH/_cellSize);
+		
+		tiles=new List<Tileset>();
+		tiles.Add(new Tileset("Fire", "Grass"));
+		tiles.Add(new Tileset("PinkHex", "PinkTile"));
+		tiles.Add(new Tileset("PurpleHex", "PinkTile"));
+		tiles.Add(new Tileset("BlueHex", "PinkTile"));
+		
         InitGame();
-
     }
 
     void InitGame(){
@@ -172,7 +201,7 @@ public class GameOfLife : MonoBehaviour {
             for(int y=0; y<_numY; y++){
 
                 Transform containerPos = gameObject.transform;
-                cell = new Cell(x * .5f, y * .5f, containerPos, cellPrefab);
+                cell = new Cell(x * .5f, y * .5f, containerPos, cellPrefab, this);
                 _cellArray[x,y] = cell;
 
             }
@@ -258,15 +287,33 @@ public class GameOfLife : MonoBehaviour {
 		{
 			Randomize();
 		}
+//		if(Input.GetButtonDown("Fire1"))
+//		{
+//			FlipRandomize();
+//		}
+//		if(Input.GetButtonDown("Fire2"))
+//		{
+//			AddRandomize();
+//		}
+
 		if(Input.GetButtonDown("Fire1"))
 		{
-			FlipRandomize();
-		}
-		if(Input.GetButtonDown("Fire2"))
-		{
-			AddRandomize();
+			if(tileIndex==tiles.Count-1)
+			{
+				tileIndex=0;
+			}
+			else
+			{
+				tileIndex=tileIndex+1;
+			}
 		}
 
+		if(Input.GetButtonDown("Fire2"))
+		{
+			swap=!swap;
+		}
+
+		
 		for (int x=0;x<_numX;x++) { 
             for (int y=0;y<_numY;y++) {
                 _cellArray[x,y].CalculateNextState();
